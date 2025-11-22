@@ -300,6 +300,24 @@ char kb_ascii_map[KEY_MAX] = {
 	[KEY_Y] = 'y',
 	[KEY_Z] = 'z',
 
+	[KEY_NUMPAD_0] = '0',
+	[KEY_NUMPAD_1] = '1',
+	[KEY_NUMPAD_2] = '2',
+	[KEY_NUMPAD_3] = '3',
+	[KEY_NUMPAD_4] = '4',
+	[KEY_NUMPAD_5] = '5',
+	[KEY_NUMPAD_6] = '6',
+	[KEY_NUMPAD_7] = '7',
+	[KEY_NUMPAD_8] = '8',
+	[KEY_NUMPAD_9] = '9',
+
+	[KEY_NUMPAD_PERIOD] = '.',
+	[KEY_NUMPAD_PLUS] = '+',
+	[KEY_NUMPAD_MINUS] = '-',
+	[KEY_NUMPAD_TIMES] = '*',
+	[KEY_NUMPAD_DIVIDE] = '/',
+	[KEY_NUMPAD_ENTER] = '\r', // being a little cheeky here
+
 	[KEY_GRAVE] = '`',
 	[KEY_TILDE] = '~',
 	[KEY_EXCLAIM] = '!',
@@ -316,7 +334,20 @@ char kb_ascii_map[KEY_MAX] = {
 	[KEY_UNDERSCORE] = '_',
 	[KEY_EQUALS] = '=',
 	[KEY_PLUS] = '+',
-	/* ... */
+	[KEY_LBRACKET] = '[',
+	[KEY_LBRACE] = '{',
+	[KEY_RBRACKET] = ']',
+	[KEY_RBRACE] = '}',
+	[KEY_BACKSLASH] = '\\',
+	[KEY_BAR] = '|',
+	[KEY_SEMICOLON] = ';',
+	[KEY_COLON] = ':',
+	[KEY_QUOTE] = '\'',
+	[KEY_DQUOTE] = '"',
+	[KEY_COMMA] = ',',
+	[KEY_LANGLE] = '<',
+	[KEY_PERIOD] = '.',
+	[KEY_RANGLE] = '>',
 	[KEY_SLASH] = '/',
 	[KEY_QUESTION] = '?',
 
@@ -345,6 +376,7 @@ struct key_event ke_pop(void) {
 }
 
 static bool key_release_pending = false;
+static bool extended = false;
 #define KEY(byte, kb_key) \
 	case byte: { \
 		ke_push((struct key_event) { .key = KEY_##kb_key, .type = key_release_pending ? KEY_RELEASE : KEY_PRESS }); \
@@ -360,58 +392,147 @@ static bool key_release_pending = false;
 		kb_state[KEY_##kb_key] = !key_release_pending; \
 		key_release_pending = false; \
 	} break
-void kb_handle_scancode(uint8_t initial_byte) {
-	if (initial_byte == 0xF0) {
+void kb_handle_scancode(uint8_t code) {
+	// TODO: print screen press 0xE0 0x12 0xE0 0x7C
+	// TODO: print screen release 0xE0 0xF0 0x7C 0xE0 0xF0 0x12
+	// TODO: pause press&release 0xE1 0x14 0x77 0xE1 0xF0 0x14 0xF0 0x77
+	if (code == 0xF0) {
 		key_release_pending = true;
 		return;
 	}
-	switch (initial_byte) {
-		KEY(0x0D, TAB);
-		KEYS(0x0E, GRAVE, TILDE);
-		KEY(0x12, LSHIFT);
-		KEY(0x15, Q);
-		KEYS(0x16, 1, EXCLAIM);
-		KEY(0x1A, Z);
-		KEY(0x1B, S);
-		KEY(0x1C, A);
-		KEY(0x1D, W);
-		KEYS(0x1E, 2, AT);
-		KEY(0x21, C);
-		KEY(0x22, X);
-		KEY(0x23, D);
-		KEY(0x24, E);
-		KEYS(0x25, 4, DOLLAR);
-		KEYS(0x26, 3, HASH);
-		KEY(0x29, SPACE);
-		KEY(0x2A, V);
-		KEY(0x2B, F);
-		KEY(0x2C, T);
-		KEY(0x2D, R);
-		KEYS(0x2E, 5, PERCENT);
-		KEY(0x31, N);
-		KEY(0x32, B);
-		KEY(0x33, H);
-		KEY(0x34, G);
-		KEY(0x35, Y);
-		KEYS(0x36, 6, CARAT);
-		KEY(0x3A, M);
-		KEY(0x3B, J);
-		KEY(0x3C, U);
-		KEYS(0x3D, 7, AMP);
-		KEYS(0x3E, 8, STAR);
-		KEY(0x42, K);
-		KEY(0x43, I);
-		KEY(0x44, O);
-		KEYS(0x45, 0, RPAREN);
-		KEYS(0x46, 9, LPAREN);
-		KEYS(0x4A, SLASH, QUESTION);
-		KEY(0x4B, L);
-		KEY(0x4D, P);
-		KEYS(0x4E, MINUS, UNDERSCORE);
-		KEYS(0x55, EQUALS, PLUS);
-		KEY(0x59, RSHIFT);
-		KEY(0x5A, ENTER);
-		KEY(0x66, BACKSPACE);
+	if (code == 0xE0) {
+		extended = true;
+		return;
+	}
+	if (!extended) {
+		switch (code) {
+			KEY(0x01, F9);
+			KEY(0x03, F5);
+			KEY(0x04, F3);
+			KEY(0x05, F1);
+			KEY(0x06, F2);
+			KEY(0x07, F12);
+			KEY(0x09, F10);
+			KEY(0x0A, F8);
+			KEY(0x0B, F6);
+			KEY(0x0C, F4);
+			KEY(0x0D, TAB);
+			KEYS(0x0E, GRAVE, TILDE);
+			KEY(0x11, LALT);
+			KEY(0x12, LSHIFT);
+			KEY(0x14, LCTL);
+			KEY(0x15, Q);
+			KEYS(0x16, 1, EXCLAIM);
+			KEY(0x1A, Z);
+			KEY(0x1B, S);
+			KEY(0x1C, A);
+			KEY(0x1D, W);
+			KEYS(0x1E, 2, AT);
+			KEY(0x21, C);
+			KEY(0x22, X);
+			KEY(0x23, D);
+			KEY(0x24, E);
+			KEYS(0x25, 4, DOLLAR);
+			KEYS(0x26, 3, HASH);
+			KEY(0x29, SPACE);
+			KEY(0x2A, V);
+			KEY(0x2B, F);
+			KEY(0x2C, T);
+			KEY(0x2D, R);
+			KEYS(0x2E, 5, PERCENT);
+			KEY(0x31, N);
+			KEY(0x32, B);
+			KEY(0x33, H);
+			KEY(0x34, G);
+			KEY(0x35, Y);
+			KEYS(0x36, 6, CARAT);
+			KEY(0x3A, M);
+			KEY(0x3B, J);
+			KEY(0x3C, U);
+			KEYS(0x3D, 7, AMP);
+			KEYS(0x3E, 8, STAR);
+			KEYS(0x41, COMMA, LANGLE);
+			KEY(0x42, K);
+			KEY(0x43, I);
+			KEY(0x44, O);
+			KEYS(0x45, 0, RPAREN);
+			KEYS(0x46, 9, LPAREN);
+			KEYS(0x49, PERIOD, RANGLE);
+			KEYS(0x4A, SLASH, QUESTION);
+			KEY(0x4B, L);
+			KEYS(0x4C, SEMICOLON, COLON);
+			KEY(0x4D, P);
+			KEYS(0x4E, MINUS, UNDERSCORE);
+			KEYS(0x52, QUOTE, DQUOTE);
+			KEYS(0x54, LBRACKET, LBRACE);
+			KEYS(0x55, EQUALS, PLUS);
+			// TODO: 0x58 -> capslock
+			KEY(0x59, RSHIFT);
+			KEY(0x5A, ENTER);
+			KEYS(0x5B, RBRACKET, RBRACE);
+			KEYS(0x5D, BACKSLASH, BAR);
+			KEY(0x66, BACKSPACE);
+			KEY(0x69, NUMPAD_1);
+			KEY(0x6C, NUMPAD_7);
+			KEY(0x70, NUMPAD_0);
+			KEY(0x71, NUMPAD_PERIOD);
+			KEY(0x72, NUMPAD_2);
+			KEY(0x73, NUMPAD_5);
+			KEY(0x74, NUMPAD_6);
+			KEY(0x75, NUMPAD_8);
+			KEY(0x76, ESCAPE);
+			// TODO: 0x77 -> numlock
+			KEY(0x78, F11);
+			KEY(0x79, NUMPAD_PLUS);
+			KEY(0x7A, NUMPAD_3);
+			KEY(0x7B, NUMPAD_MINUS);
+			KEY(0x7C, NUMPAD_TIMES);
+			KEY(0x7D, NUMPAD_9);
+			// TODO: 0x7E -> scroll lock
+			KEY(0x83, F7);
+		}
+	} else {
+		switch (code) {
+			KEY(0x10, MM_WWW_SEARCH);
+			KEY(0x11, RALT);
+			KEY(0x14, RCTL);
+			KEY(0x15, MM_PREV_TRACK);
+			KEY(0x18, MM_WWW_FAVOURITES);
+			KEY(0x1F, LGUI);
+			KEY(0x20, MM_WWW_REFRESH);
+			KEY(0x21, MM_VOLUME_DOWN);
+			KEY(0x23, MM_MUTE);
+			KEY(0x27, RGUI);
+			KEY(0x28, MM_WWW_STOP);
+			KEY(0x2B, MM_CALCULATOR);
+			KEY(0x2F, APPS);
+			KEY(0x30, MM_WWW_FORWARD);
+			KEY(0x32, MM_VOLUME_UP);
+			KEY(0x34, MM_PLAYPAUSE);
+			KEY(0x37, POWER);
+			KEY(0x38, MM_WWW_BACK);
+			KEY(0x3A, MM_WWW_HOME);
+			KEY(0x3B, MM_STOP);
+			KEY(0x3F, SLEEP);
+			KEY(0x40, MM_COMPUTER);
+			KEY(0x48, MM_EMAIL);
+			KEY(0x4A, NUMPAD_DIVIDE);
+			KEY(0x4D, MM_NEXT_TRACK);
+			KEY(0x50, MM_SELECT);
+			KEY(0x5A, NUMPAD_ENTER);
+			KEY(0x5E, WAKE);
+			KEY(0x69, END);
+			KEY(0x6B, LEFT);
+			KEY(0x6C, HOME);
+			// TODO: 0x70 -> insert
+			KEY(0x71, DELETE);
+			KEY(0x72, DOWN);
+			KEY(0x74, RIGHT);
+			KEY(0x75, UP);
+			KEY(0x7A, PAGEDOWN);
+			KEY(0x7D, PAGEUP);
+		}
+		extended = false;
 	}
 }
 
