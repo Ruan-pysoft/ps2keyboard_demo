@@ -377,6 +377,9 @@ struct key_event ke_pop(void) {
 
 static bool key_release_pending = false;
 static bool extended = false;
+static bool first_half_printscr = false;
+static bool first_half_printscr_release = false;
+static int pause_progress = 0;
 #define KEY(byte, kb_key) \
 	case byte: { \
 		ke_push((struct key_event) { \
@@ -410,7 +413,29 @@ void kb_handle_scancode(uint8_t code) {
 		extended = true;
 		return;
 	}
+
+	if (pause_progress == 0 && code == 0xE1) { ++pause_progress; return; }
+	if (pause_progress == 1 && code == 0x14) { ++pause_progress; return; }
+	if (pause_progress == 2 && code == 0x77) { ++pause_progress; return; }
+	if (pause_progress == 3 && code == 0xE1) { ++pause_progress; return; }
+	if (pause_progress == 4 && code == 0xF0) { ++pause_progress; return; }
+	if (pause_progress == 5 && code == 0x14) { ++pause_progress; return; }
+	if (pause_progress == 6 && code == 0xF0) { ++pause_progress; return; }
+	if (pause_progress == 7 && code == 0x77) {
+		ke_push((struct key_event) {
+			.key = KEY_PAUSE,
+			.type = KEY_PRESS,
+		});
+		ke_push((struct key_event) {
+			.key = KEY_PAUSE,
+			.type = KEY_RELEASE,
+		});
+		return;
+	}
+	pause_progress = 0;
+
 	if (!extended) {
+		first_half_printscr = false;
 		switch (code) {
 			KEY(0x01, F9);
 			KEY(0x03, F5);
@@ -472,7 +497,7 @@ void kb_handle_scancode(uint8_t code) {
 			KEYS(0x52, QUOTE, DQUOTE);
 			KEYS(0x54, LBRACKET, LBRACE);
 			KEYS(0x55, EQUALS, PLUS);
-			// TODO: 0x58 -> capslock
+			KEY(0x58, CAPSLOCK);
 			KEY(0x59, RSHIFT);
 			KEY(0x5A, ENTER);
 			KEYS(0x5B, RBRACKET, RBRACE);
@@ -487,20 +512,48 @@ void kb_handle_scancode(uint8_t code) {
 			KEY(0x74, NUMPAD_6);
 			KEY(0x75, NUMPAD_8);
 			KEY(0x76, ESCAPE);
-			// TODO: 0x77 -> numlock
+			KEY(0x77, NUMLOCK);
 			KEY(0x78, F11);
 			KEY(0x79, NUMPAD_PLUS);
 			KEY(0x7A, NUMPAD_3);
 			KEY(0x7B, NUMPAD_MINUS);
 			KEY(0x7C, NUMPAD_TIMES);
 			KEY(0x7D, NUMPAD_9);
-			// TODO: 0x7E -> scroll lock
+			KEY(0x7E, SCROLLLOCK);
 			KEY(0x83, F7);
 		}
+	} else if (first_half_printscr) {
+		if (first_half_printscr_release != key_release_pending) {
+			first_half_printscr = false;
+			kb_handle_scancode(code);
+		} else if (!key_release_pending && code == 0x7C) {
+			ke_push((struct key_event) {
+				.key = KEY_PRINTSCR,
+				.type = kb_state[KEY_PRINTSCR] ? KEY_BOUNCE : KEY_PRESS
+			});
+			kb_state[KEY_PRINTSCR] = true;
+			key_release_pending = false;
+		} else if (key_release_pending && code == 0x12) {
+			ke_push((struct key_event) {
+				.key = KEY_PRINTSCR,
+				.type = KEY_RELEASE,
+			});
+			kb_state[KEY_PRINTSCR] = false;
+			key_release_pending = false;
+		} else {
+			first_half_printscr = false;
+			kb_handle_scancode(code);
+		}
 	} else {
+		first_half_printscr = false;
 		switch (code) {
 			KEY(0x10, MM_WWW_SEARCH);
 			KEY(0x11, RALT);
+			case 0x12: if (!key_release_pending) {
+				first_half_printscr = true;
+				first_half_printscr_release = false;
+				key_release_pending = false;
+			} break;
 			KEY(0x14, RCTL);
 			KEY(0x15, MM_PREV_TRACK);
 			KEY(0x18, MM_WWW_FAVOURITES);
@@ -530,12 +583,17 @@ void kb_handle_scancode(uint8_t code) {
 			KEY(0x69, END);
 			KEY(0x6B, LEFT);
 			KEY(0x6C, HOME);
-			// TODO: 0x70 -> insert
+			KEY(0x70, INSERT);
 			KEY(0x71, DELETE);
 			KEY(0x72, DOWN);
 			KEY(0x74, RIGHT);
 			KEY(0x75, UP);
 			KEY(0x7A, PAGEDOWN);
+			case 0x7C: if (key_release_pending) {
+				first_half_printscr = true;
+				first_half_printscr_release = true;
+				key_release_pending = false;
+			} break;
 			KEY(0x7D, PAGEUP);
 		}
 		extended = false;
