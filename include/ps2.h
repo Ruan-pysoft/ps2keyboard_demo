@@ -170,6 +170,7 @@ struct key_event {
 	enum key key;
 	enum key_event_type {
 		KEY_PRESS,
+		KEY_BOUNCE,
 		KEY_RELEASE,
 	} type;
 };

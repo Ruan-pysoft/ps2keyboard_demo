@@ -42,7 +42,7 @@ void kernel_main(void) {
 	for (;;) {
 		while (ke_query()) {
 			struct key_event event = ke_pop();
-			if (event.type != KEY_PRESS) continue;
+			if (event.type != KEY_PRESS && event.type != KEY_BOUNCE) continue;
 
 			if (event.key == KEY_ENTER) {
 				terminal_writestring("\r\n");

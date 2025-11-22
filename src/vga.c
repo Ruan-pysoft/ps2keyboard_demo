@@ -81,6 +81,7 @@ static void term_adv(void) {
 		if (++term_row == VGA_HEIGHT) {
 			term_row = 0;
 		}
+		if (VGA_HEIGHT - term_row < 3) terminal_scroll(5);
 	}
 	update_cursor(term_col, term_row);
 }

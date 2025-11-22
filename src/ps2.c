@@ -379,17 +379,23 @@ static bool key_release_pending = false;
 static bool extended = false;
 #define KEY(byte, kb_key) \
 	case byte: { \
-		ke_push((struct key_event) { .key = KEY_##kb_key, .type = key_release_pending ? KEY_RELEASE : KEY_PRESS }); \
+		ke_push((struct key_event) { \
+			.key = KEY_##kb_key, \
+			.type = key_release_pending ? KEY_RELEASE : \
+				kb_state[KEY_##kb_key] ? KEY_BOUNCE : KEY_PRESS \
+		}); \
 		kb_state[KEY_##kb_key] = !key_release_pending; \
 		key_release_pending = false; \
 	} break
 #define KEYS(byte, kb_key, kb_shiftkey) \
 	case byte: { \
+		const enum key key = kb_state[KEY_LSHIFT] || kb_state[KEY_RSHIFT] ? KEY_##kb_shiftkey : KEY_##kb_key; \
 		ke_push((struct key_event) { \
-			.key = kb_state[KEY_LSHIFT] || kb_state[KEY_RSHIFT] ? KEY_##kb_shiftkey : KEY_##kb_key, \
-			.type = key_release_pending ? KEY_RELEASE : KEY_PRESS \
+			.key = key, \
+			.type = key_release_pending ? KEY_RELEASE : \
+				kb_state[key] ? KEY_BOUNCE : KEY_PRESS \
 		}); \
-		kb_state[KEY_##kb_key] = !key_release_pending; \
+		kb_state[key] = !key_release_pending; \
 		key_release_pending = false; \
 	} break
 void kb_handle_scancode(uint8_t code) {
