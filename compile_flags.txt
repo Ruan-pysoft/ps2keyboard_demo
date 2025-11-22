@@ -1,0 +1,8 @@
+-m32
+-ffreestanding
+-nostdlib
+-std=c99
+-Wall
+-Wextra
+-I./include
+-isystem./include/libk
