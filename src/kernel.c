@@ -43,37 +43,29 @@ void kernel_main(void) {
 		io_wait();
 	}
 
-	uint8_t default_color = vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
-	uint8_t highlight_color = vga_entry_color(VGA_COLOR_BLACK, VGA_COLOR_WHITE);
 	for (;;) {
 		while (ke_query()) {
 			struct key_event event = ke_pop();
-			if (event.type == KEY_PRESS) {
-				//terminal_setcolor(default_color);
-				if (event.key == KEY_ENTER) {
-					terminal_writestring("\r\n");
-				} else if (event.key == KEY_BACKSPACE) {
-					size_t x, y;
-					x = terminal_getx();
-					y = terminal_gety();
+			if (event.type != KEY_PRESS) continue;
 
-					if (x > 0) {
-						--x;
-						terminal_goto(x, y);
-						terminal_putchar(' ');
-						terminal_goto(x, y);
-					}
-				} else if (kb_ascii_map[event.key]) {
-					terminal_putchar(kb_ascii_map[event.key]);
+			if (event.key == KEY_ENTER) {
+				terminal_writestring("\r\n");
+			} else if (event.key == KEY_BACKSPACE) {
+				size_t x, y;
+				x = terminal_getx();
+				y = terminal_gety();
+
+				if (x > 0) {
+					--x;
+					terminal_goto(x, y);
+					terminal_putchar(' ');
+					terminal_goto(x, y);
 				}
-			} else if (event.type == KEY_RELEASE) {
-				//terminal_setcolor(highlight_color);
-				//terminal_putchar(kb_ascii_map[event.key]);
+			} else if (kb_ascii_map[event.key]) {
+				terminal_putchar(kb_ascii_map[event.key]);
 			}
 		}
 
 		__asm__ volatile("hlt" ::: "memory");
 	}
-
-	terminal_writestring("\tDone, exiting!");
 }
