@@ -50,7 +50,11 @@ void kernel_main(void) {
 			struct key_event event = ke_pop();
 			if (event.type == KEY_PRESS) {
 				//terminal_setcolor(default_color);
-				terminal_putchar(kb_ascii_map[event.key]);
+				if (event.key == KEY_ENTER) {
+					terminal_writestring("\r\n");
+				} else {
+					terminal_putchar(kb_ascii_map[event.key]);
+				}
 			} else if (event.type == KEY_RELEASE) {
 				//terminal_setcolor(highlight_color);
 				//terminal_putchar(kb_ascii_map[event.key]);
