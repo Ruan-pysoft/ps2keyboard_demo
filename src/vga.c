@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "vga.h"
+#include "utils.h"
 
 size_t strlen(const char* str)
 {
@@ -17,6 +18,27 @@ size_t strlen(const char* str)
 #define VGA_HEIGHT  25
 #define VGA_MEMORY  0xB8000
 
+// from https://wiki.osdev.org/Text_Mode_Cursor
+static void enable_cursor(uint8_t cursor_start, uint8_t cursor_end) {
+	outb(0x3D4, 0x0A);
+	outb(0x3D5, (inb(0x3D5) & 0xC0) | cursor_start);
+
+	outb(0x3D4, 0x0B);
+	outb(0x3D5, (inb(0x3D5) & 0xE0) | cursor_end);
+}
+static void disable_cursor(void) {
+	outb(0x3D4, 0x0A);
+	outb(0x3D5, 0x20);
+}
+static void update_cursor(int x, int y) {
+	const uint16_t pos = y * VGA_WIDTH + x;
+
+	outb(0x3D4, 0x0F);
+	outb(0x3D5, (uint8_t)(pos & 0xFF));
+	outb(0x3D4, 0x0E);
+	outb(0x3D5, (uint8_t)((pos>>8) & 0xFF));
+}
+
 static size_t term_row;
 static size_t term_col;
 static uint8_t term_color;
@@ -29,6 +51,9 @@ void terminal_initialize(void)
 	term_row = 0;
 	term_col = 0;
 	term_color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
+
+	enable_cursor(8, 15);
+	update_cursor(term_col, term_row);
 	
 	for (size_t y = 0; y < VGA_HEIGHT; ++y) {
 		for (size_t x = 0; x < VGA_WIDTH; ++x) {
@@ -57,6 +82,13 @@ static void term_adv(void) {
 			term_row = 0;
 		}
 	}
+	update_cursor(term_col, term_row);
+}
+size_t terminal_getx(void) {
+	return term_col;
+}
+size_t terminal_gety(void) {
+	return term_row;
 }
 void terminal_goto(size_t x, size_t y) {
 	if (x >= VGA_WIDTH) x = VGA_WIDTH-1;
@@ -64,6 +96,7 @@ void terminal_goto(size_t x, size_t y) {
 
 	term_row = y;
 	term_col = x;
+	update_cursor(term_col, term_row);
 }
 void terminal_scroll(size_t lines) {
 	if (lines >= VGA_HEIGHT) {
@@ -92,12 +125,15 @@ void terminal_putchar(char c)
 {
 	if (c == '\n') {
 		++term_row;
+		update_cursor(term_col, term_row);
 		if (VGA_HEIGHT - term_row < 3) terminal_scroll(5);
 	} else if (c == '\t') {
 		term_col &= ~3;
 		term_col += 4;
+		update_cursor(term_col, term_row);
 	} else if (c == '\r') {
 		term_col = 0;
+		update_cursor(term_col, term_row);
 	} else {
 		terminal_putentryat(c, term_color, term_col, term_row);
 		term_adv();

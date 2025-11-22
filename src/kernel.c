@@ -37,7 +37,7 @@ void kernel_early_main(void) {
 }
 
 void kernel_main(void) {
-	terminal_writestring("Hello, world!");
+	terminal_writestring("Hello, world!\r\n");
 
 	for (int i = 0; i < 1 << 16; ++i) {
 		io_wait();
@@ -52,7 +52,18 @@ void kernel_main(void) {
 				//terminal_setcolor(default_color);
 				if (event.key == KEY_ENTER) {
 					terminal_writestring("\r\n");
-				} else {
+				} else if (event.key == KEY_BACKSPACE) {
+					size_t x, y;
+					x = terminal_getx();
+					y = terminal_gety();
+
+					if (x > 0) {
+						--x;
+						terminal_goto(x, y);
+						terminal_putchar(' ');
+						terminal_goto(x, y);
+					}
+				} else if (kb_ascii_map[event.key]) {
 					terminal_putchar(kb_ascii_map[event.key]);
 				}
 			} else if (event.type == KEY_RELEASE) {

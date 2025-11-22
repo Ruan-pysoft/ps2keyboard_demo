@@ -300,11 +300,31 @@ char kb_ascii_map[KEY_MAX] = {
 	[KEY_Y] = 'y',
 	[KEY_Z] = 'z',
 
+	[KEY_GRAVE] = '`',
+	[KEY_TILDE] = '~',
+	[KEY_EXCLAIM] = '!',
+	[KEY_AT] = '@',
+	[KEY_HASH] = '#',
+	[KEY_DOLLAR] = '$',
+	[KEY_PERCENT] = '%',
+	[KEY_CARAT] = '^',
+	[KEY_AMP] = '&',
+	[KEY_STAR] = '*',
+	[KEY_LPAREN] = '(',
+	[KEY_RPAREN] = ')',
+	[KEY_MINUS] = '-',
+	[KEY_UNDERSCORE] = '_',
+	[KEY_EQUALS] = '=',
+	[KEY_PLUS] = '+',
+	/* ... */
+	[KEY_SLASH] = '/',
+	[KEY_QUESTION] = '?',
+
 	[KEY_SPACE] = ' ',
 	[KEY_ENTER] = '\n',
 	[KEY_TAB] = '\t',
 
-	//0,
+	0,
 };
 
 static struct key_event ke_queue[256];
@@ -331,6 +351,15 @@ static bool key_release_pending = false;
 		kb_state[KEY_##kb_key] = !key_release_pending; \
 		key_release_pending = false; \
 	} break
+#define KEYS(byte, kb_key, kb_shiftkey) \
+	case byte: { \
+		ke_push((struct key_event) { \
+			.key = kb_state[KEY_LSHIFT] || kb_state[KEY_RSHIFT] ? KEY_##kb_shiftkey : KEY_##kb_key, \
+			.type = key_release_pending ? KEY_RELEASE : KEY_PRESS \
+		}); \
+		kb_state[KEY_##kb_key] = !key_release_pending; \
+		key_release_pending = false; \
+	} break
 void kb_handle_scancode(uint8_t initial_byte) {
 	if (initial_byte == 0xF0) {
 		key_release_pending = true;
@@ -338,44 +367,51 @@ void kb_handle_scancode(uint8_t initial_byte) {
 	}
 	switch (initial_byte) {
 		KEY(0x0D, TAB);
+		KEYS(0x0E, GRAVE, TILDE);
+		KEY(0x12, LSHIFT);
 		KEY(0x15, Q);
-		KEY(0x16, 1);
+		KEYS(0x16, 1, EXCLAIM);
 		KEY(0x1A, Z);
 		KEY(0x1B, S);
 		KEY(0x1C, A);
 		KEY(0x1D, W);
-		KEY(0x1E, 2);
+		KEYS(0x1E, 2, AT);
 		KEY(0x21, C);
 		KEY(0x22, X);
 		KEY(0x23, D);
 		KEY(0x24, E);
-		KEY(0x25, 4);
-		KEY(0x26, 3);
+		KEYS(0x25, 4, DOLLAR);
+		KEYS(0x26, 3, HASH);
 		KEY(0x29, SPACE);
 		KEY(0x2A, V);
 		KEY(0x2B, F);
 		KEY(0x2C, T);
 		KEY(0x2D, R);
-		KEY(0x2E, 5);
+		KEYS(0x2E, 5, PERCENT);
 		KEY(0x31, N);
 		KEY(0x32, B);
 		KEY(0x33, H);
 		KEY(0x34, G);
 		KEY(0x35, Y);
-		KEY(0x36, 6);
+		KEYS(0x36, 6, CARAT);
 		KEY(0x3A, M);
 		KEY(0x3B, J);
 		KEY(0x3C, U);
-		KEY(0x3D, 7);
-		KEY(0x3E, 8);
+		KEYS(0x3D, 7, AMP);
+		KEYS(0x3E, 8, STAR);
 		KEY(0x42, K);
 		KEY(0x43, I);
 		KEY(0x44, O);
-		KEY(0x45, 0);
-		KEY(0x46, 9);
+		KEYS(0x45, 0, RPAREN);
+		KEYS(0x46, 9, LPAREN);
+		KEYS(0x4A, SLASH, QUESTION);
 		KEY(0x4B, L);
 		KEY(0x4D, P);
+		KEYS(0x4E, MINUS, UNDERSCORE);
+		KEYS(0x55, EQUALS, PLUS);
+		KEY(0x59, RSHIFT);
 		KEY(0x5A, ENTER);
+		KEY(0x66, BACKSPACE);
 	}
 }
 
