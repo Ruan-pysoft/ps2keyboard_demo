@@ -39,10 +39,6 @@ void kernel_early_main(void) {
 void kernel_main(void) {
 	terminal_writestring("Hello, world!\r\n");
 
-	for (int i = 0; i < 1 << 16; ++i) {
-		io_wait();
-	}
-
 	for (;;) {
 		while (ke_query()) {
 			struct key_event event = ke_pop();
