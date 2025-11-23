@@ -401,9 +401,6 @@ static int pause_progress = 0;
 		key_release_pending = false; \
 	} break
 void kb_handle_scancode(uint8_t code) {
-	// TODO: print screen press 0xE0 0x12 0xE0 0x7C
-	// TODO: print screen release 0xE0 0xF0 0x7C 0xE0 0xF0 0x12
-	// TODO: pause press&release 0xE1 0x14 0x77 0xE1 0xF0 0x14 0xF0 0x77
 	if (code == 0xF0) {
 		key_release_pending = true;
 		return;
@@ -429,6 +426,7 @@ void kb_handle_scancode(uint8_t code) {
 			.key = KEY_PAUSE,
 			.type = KEY_RELEASE,
 		});
+		pause_progress = 0;
 		return;
 	}
 	pause_progress = 0;
