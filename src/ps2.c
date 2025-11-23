@@ -251,7 +251,6 @@ static uint8_t kb_comm_queue[256];
 static uint8_t kb_cq_head = 0;
 static uint8_t kb_cq_tail = 0;
 
-static void kb_comm_send(void);
 static void kb_sched_comm(uint8_t comm) {
 	const bool exec = kb_cq_tail == kb_cq_head;
 	kb_comm_queue[kb_cq_tail++] = comm;
