@@ -74,6 +74,7 @@ static bool port1_sendb(uint8_t byte) {
 
 	while (tries < 1024) {
 		if (!can_take_input()) {
+			io_wait();
 			++tries;
 		} else {
 			outb(DATA_PORT, byte);
@@ -216,7 +217,7 @@ void keyboard_init(void) {
 		uint8_t byte0 = 0, byte1 = 0;
 		if (!read_with_timeout(&byte0) || !read_with_timeout(&byte1)) {
 			port2_works = false;
-			send_commb(CMD_PORT1_DISABLE);
+			send_commb(CMD_PORT2_DISABLE);
 		}
 
 		if ((byte0 == 0xFA && byte1 == 0xAA) || (byte0 == 0xAA && byte1 == 0xFA)) {
