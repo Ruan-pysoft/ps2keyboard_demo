@@ -620,7 +620,7 @@ void keyboard_interrupt_handler(void) {
 	} else if (initial_byte == 0xFC || initial_byte == 0xFD) {
 		// self test failed
 		terminal_putchar('x');
-	} else if (initial_byte == 0xFF) {
+	} else if (initial_byte == 0xFE) {
 		// resend
 		//terminal_putchar('?');
 		if (kb_cq_head != kb_cq_tail) {
