@@ -502,6 +502,7 @@ void kb_handle_scancode(uint8_t code) {
 			KEYS(0x5D, BACKSLASH, BAR);
 			KEY(0x66, BACKSPACE);
 			KEY(0x69, NUMPAD_1);
+			KEY(0x6B, NUMPAD_4);
 			KEY(0x6C, NUMPAD_7);
 			KEY(0x70, NUMPAD_0);
 			KEY(0x71, NUMPAD_PERIOD);
