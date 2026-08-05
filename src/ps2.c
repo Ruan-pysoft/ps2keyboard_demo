@@ -532,13 +532,19 @@ void kb_handle_scancode(uint8_t code) {
 			});
 			kb_state[KEY_PRINTSCR] = true;
 			key_release_pending = false;
+
+			extended = false;
+			first_half_printscr = false;
 		} else if (key_release_pending && code == 0x12) {
 			ke_push((struct key_event) {
 				.key = KEY_PRINTSCR,
 				.type = KEY_RELEASE,
 			});
 			kb_state[KEY_PRINTSCR] = false;
+
 			key_release_pending = false;
+			extended = false;
+			first_half_printscr = false;
 		} else {
 			first_half_printscr = false;
 			kb_handle_scancode(code);
